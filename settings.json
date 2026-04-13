@@ -1,7 +1,7 @@
  {
   "name": "AFK Bot",
   "bot-account": {
-    "username": "Technoblade",
+    "username": "Kiel_In_EssenseBOT",
     "password": "",
     "type": "offline"
   },
@@ -27,7 +27,7 @@
     },
     "chat-messages": {
       "enabled": false,
-      "repeat": true,
+      "repeat": false,
       "repeat-delay": 500,
       "messages": [
         "I'm a regular player",
@@ -49,7 +49,7 @@
     "enabled": true,
     "circle-walk": {
       "enabled": true,
-      "radius": 2,
+      "radius": 1,
       "speed": 3000
     },
     "look-around": {
@@ -58,7 +58,7 @@
     },
     "random-jump": {
       "enabled": true,
-      "interval": 10000
+      "interval": 1000
     }
   },
   "modules": {
@@ -73,8 +73,8 @@
     "auto-eat": false
   },
   "beds": {
-    "pick-up-day": true,
-    "place-night": true
+    "pick-up-day": false,
+    "place-night": false
   },
   "discord": {
     "enabled": true,
