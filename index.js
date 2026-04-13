@@ -103,38 +103,30 @@ app.get('/', (req, res) => {
             <span id="live-indicator" class="status-dot pulse" style="color: #ef4444;"></span> 
             ${config.name}
           </h1>
-          
           <div class="stat-card">
             <div class="label">Status</div>
             <div class="value" id="status-text">Connecting...</div>
           </div>
-
           <div class="stat-card">
             <div class="label">Uptime</div>
             <div class="value" id="uptime-text">0h 0m 0s</div>
           </div>
-
           <div class="stat-card">
             <div class="label">Coordinates</div>
             <div class="value" id="coords-text">Waiting...</div>
           </div>
-
           <div class="stat-card">
             <div class="label">Server</div>
             <div class="value">${config.server.ip}</div>
           </div>
-
           <a href="/tutorial" class="btn-guide">View Setup Guide</a>
-          
           <div class="connection-bar">
             <div class="connection-fill" id="activity-bar"></div>
           </div>
-          
           <p style="color: #64748b; font-size: 12px; margin-top: 15px;">
             Live connection to Bot Process
           </p>
         </div>
-
         <script>
           const formatUptime = (seconds) => {
             const h = Math.floor(seconds / 3600);
@@ -142,18 +134,15 @@ app.get('/', (req, res) => {
             const s = seconds % 60;
             return \`\${h}h \${m}m \${s}s\`;
           };
-
           const updateStats = async () => {
             try {
               const res = await fetch('/health');
               const data = await res.json();
-              
               const statusText = document.getElementById('status-text');
               const uptimeText = document.getElementById('uptime-text');
               const coordsText = document.getElementById('coords-text');
               const liveDot = document.getElementById('live-indicator');
               const container = document.getElementById('main-container');
-
               if (data.status === 'connected') {
                 statusText.innerHTML = '<span class="status-dot" style="color: #4ade80;"></span> Online & Running';
                 statusText.style.color = '#2dd4bf';
@@ -165,21 +154,17 @@ app.get('/', (req, res) => {
                 liveDot.style.color = '#f87171';
                 container.style.boxShadow = '0 0 50px rgba(248, 113, 113, 0.2)';
               }
-
               uptimeText.innerText = formatUptime(data.uptime);
-
               if (data.coords) {
                 coordsText.innerText = \`Coords: \${Math.floor(data.coords.x)}, \${Math.floor(data.coords.y)}, \${Math.floor(data.coords.z)}\`;
               } else {
                 coordsText.innerText = 'Unknown Location';
               }
-
             } catch (e) {
               document.getElementById('status-text').innerText = 'System Offline';
               document.getElementById('live-indicator').style.color = '#64748b';
             }
           };
-
           setInterval(updateStats, 1000);
           updateStats();
         </script>
@@ -206,7 +191,6 @@ app.get('/tutorial', (req, res) => {
       <body>
         <a href="/" class="btn-home">Back to Dashboard</a>
         <h1>Setup Guide (Under 15 Minutes)</h1>
-        
         <div class="card">
           <h2>Step 1: Configure Aternos</h2>
           <ol>
@@ -216,7 +200,6 @@ app.get('/tutorial', (req, res) => {
             <li>Install Plugins: <code>ViaVersion</code>, <code>ViaBackwards</code>, <code>ViaRewind</code>.</li>
           </ol>
         </div>
-
         <div class="card">
           <h2>Step 2: GitHub Setup</h2>
           <ol>
@@ -225,7 +208,6 @@ app.get('/tutorial', (req, res) => {
             <li>Upload all files to a new <strong>GitHub Repository</strong>.</li>
           </ol>
         </div>
-
         <div class="card">
           <h2>Step 3: Render (Free 24/7 Hosting)</h2>
           <ol>
@@ -236,7 +218,6 @@ app.get('/tutorial', (req, res) => {
             <li><strong>Magic:</strong> The bot automatically pings itself to stay awake!</li>
           </ol>
         </div>
-        
         <p style="text-align: center; margin-top: 40px; color: #64748b;">AFK Bot Dashboard</p>
       </body>
     </html>
@@ -347,12 +328,13 @@ function createBot() {
 
     bot.loadPlugin(pathfinder);
 
+    // Connection timeout - if no spawn in 3 minutes, reconnect (Aternos can be slow to start)
     const connectionTimeout = setTimeout(() => {
       if (!botState.connected) {
         console.log('[Bot] Connection timeout - no spawn received');
         scheduleReconnect();
       }
-    }, 60000);
+    }, 180000);
 
     bot.once('spawn', () => {
       clearTimeout(connectionTimeout);
@@ -375,33 +357,9 @@ function createBot() {
 
       initializeModules(bot, mcData, defaultMove);
 
-      // Setup enhanced Leave/Rejoin logic (only if periodic-rejoin is enabled)
       if (config.utils['periodic-rejoin'] && config.utils['periodic-rejoin'].enabled) {
         setupLeaveRejoin(bot, createBot);
       }
-
-      setTimeout(() => {
-        if (bot && botState.connected) {
-          bot.chat('/gamerule sendCommandFeedback false');
-        }
-      }, 3000);
-
-      setTimeout(() => {
-        if (bot && botState.connected) {
-          bot.chat('/gamemode creative');
-          console.log('[INFO] Attempted to set creative mode (requires OP)');
-        }
-      }, 3000);
-
-      bot.on('messagestr', (message) => {
-        if (
-          message.includes('commands.gamemode.success.self') ||
-          message.includes('Set own game mode to Creative Mode')
-        ) {
-          console.log('[INFO] Bot is now in Creative Mode.');
-          bot.chat('/gamerule sendCommandFeedback false');
-        }
-      });
     });
 
     bot.on('end', (reason) => {
@@ -516,15 +474,9 @@ function initializeModules(bot, mcData, defaultMove) {
     }
   }
 
-  if (config.movement['circle-walk'].enabled) {
-    startCircleWalk(bot, defaultMove);
-  }
-  if (config.movement['random-jump'].enabled) {
-    startRandomJump(bot);
-  }
-  if (config.movement['look-around'].enabled) {
-    startLookAround(bot);
-  }
+  if (config.movement['circle-walk'].enabled) startCircleWalk(bot, defaultMove);
+  if (config.movement['random-jump'].enabled) startRandomJump(bot);
+  if (config.movement['look-around'].enabled) startLookAround(bot);
 
   if (config.modules.avoidMobs) avoidMobs(bot);
   if (config.modules.combat) combatModule(bot, mcData);
@@ -551,7 +503,6 @@ function startCircleWalk(bot, defaultMove) {
 
   addInterval(() => {
     if (!bot || !botState.connected) return;
-
     const now = Date.now();
     if (now - lastPathTime < 2000) return;
     lastPathTime = now;
@@ -716,7 +667,6 @@ rl.on('line', (line) => {
     console.log('[Console] Bot not connected');
     return;
   }
-
   const trimmed = line.trim();
   if (trimmed.startsWith('say ')) {
     bot.chat(trimmed.slice(4));
