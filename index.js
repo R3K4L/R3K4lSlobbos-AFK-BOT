@@ -328,13 +328,13 @@ function createBot() {
 
     bot.loadPlugin(pathfinder);
 
-    // Connection timeout - if no spawn in 3 minutes, reconnect (Aternos can be slow to start)
+    // Connection timeout - if no spawn in 60s, reconnect
     const connectionTimeout = setTimeout(() => {
       if (!botState.connected) {
         console.log('[Bot] Connection timeout - no spawn received');
         scheduleReconnect();
       }
-    }, 180000);
+    }, 60000);
 
     bot.once('spawn', () => {
       clearTimeout(connectionTimeout);
